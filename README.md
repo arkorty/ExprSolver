@@ -7,7 +7,8 @@ This C++ program provides a simple mathematical expression evaluator using an Ab
 - [Introduction](#introduction)
 - [Usage](#usage)
 - [ASTNode Hierarchy](#astnode-hierarchy)
-- [Example Usage](#example-usage)
+- [Dependencies](#dependencies)
+- [Running Tests](#running-tests)
 - [Error Handling](#error-handling)
 - [Variable Assignment](#variable-assignment)
 - [Cleaning Variables](#cleaning-variables)
@@ -43,28 +44,48 @@ The ASTNode hierarchy consists of the following classes:
   - `Divide`: Represents the division operator.
   - `Power`: Represents the power operator.
 
-## Example Usage
+## Dependencies
 
-Execute the command below in a shell to run the example.
+- GNU Make
+- Clang
 
-```bash
-$ make run
+## Running Tests
+
+#### Test Expression
+
+```math
+\frac{{2 \cdot (3 + 1)}}{{(5 - 1)^{2 + 1}}} = \frac{8}{{4^3}} = \frac{8}{64} = 0.125
 ```
 
-In this example, the expression `-(Num1) + 2 * (4 - Num2)` is evaluated with variables `Num1` and `Num2` assigned specific values.
+#### Test Code
 
 ```cpp
-// Example usage
-Identifier::setVariable("Num1", 3.0);
-Identifier::setVariable("Num2", 7.0);
+// Test with a complex expression: (2 * (a + b)) / (c - 1) ^ (d + 1)
+Identifier::setVariable("a", 3.0);
+Identifier::setVariable("b", 1.0);
+Identifier::setVariable("c", 5.0);
+Identifier::setVariable("d", 2.0);
 
-ASTNode *expression = new Add(new UnaryMinus(new Identifier("Num1")),
-                              new Multiply(new Constant(2), new Subtract(new Constant(4), new Identifier("Num2"))));
+std::unique_ptr<const ASTNode> variableA = std::make_unique<Identifier>("a");
+std::unique_ptr<const ASTNode> variableB = std::make_unique<Identifier>("b");
+std::unique_ptr<const ASTNode> variableC = std::make_unique<Identifier>("c");
+std::unique_ptr<const ASTNode> variableD = std::make_unique<Identifier>("d");
+
+std::unique_ptr<const ASTNode> expression = std::make_unique<Divide>(
+    std::make_unique<Multiply>(std::make_unique<Constant>(2.0),
+                               std::make_unique<Add>(std::move(variableA), std::move(variableB))),
+    std::make_unique<Power>(std::make_unique<Subtract>(std::move(variableC), std::make_unique<Constant>(1.0)),
+                            std::make_unique<Add>(std::move(variableD), std::make_unique<Constant>(1.0))));
+
+// Evaluate the expression
 double result = expression->evaluate();
 
-std::cout << "Result: " << result << std::endl;
+// Asserting the result
+assert(result == 0.125);
 
-delete expression; // Free the memory
+std::cout << "Test passed successfully. Result: " << result << std::endl;
+
+// Clear variables for the next test
 Identifier::clearVariables();
 ```
 
