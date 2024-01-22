@@ -1,110 +1,238 @@
-# Arithmetic AST & Evaluator
+# Arithmetic Expression Evaluator
 
-This C++ program provides a simple mathematical expression evaluator using an Abstract Syntax Tree (AST). The AST is constructed from different types of nodes, such as constants, identifiers, unary operators (plus and minus), and binary operators (addition, subtraction, multiplication, division, and power). The program allows for the evaluation of mathematical expressions involving variables and basic operations.
+This C++ program provides a simple arithmetic expression evaluator based on Abstract Syntax Trees (AST). It supports constants, variables, unary operations (unary plus and unary minus), and binary operations (addition, subtraction, multiplication, division, and exponentiation).
 
 ## Table of Contents
 
-- [Introduction](#introduction)
+- [Features](#features)
+- [AST Node Hierarchy](#ast-node-hierarchy)
+- [Examples](#examples)
+- [Concepts](#concepts)
+- [Memory Management](#memory-management)
+- [Testing](#testing)
 - [Usage](#usage)
-- [ASTNode Hierarchy](#astnode-hierarchy)
-- [Dependencies](#dependencies)
-- [Running Tests](#running-tests)
-- [Error Handling](#error-handling)
-- [Variable Assignment](#variable-assignment)
-- [Cleaning Variables](#cleaning-variables)
 - [Contributing](#contributing)
 - [License](#license)
 
-## Introduction
+## Features
 
-The program defines a hierarchy of classes representing different types of AST nodes. Each node has a specific type and implements the `evaluate` method to perform the corresponding mathematical operation. The AST is utilized to evaluate complex mathematical expressions composed of constants, variables, and various operators.
+- Evaluate arithmetic expressions with constants and variables.
+- Handle unary operations (unary plus and unary minus).
+- Support binary operations: addition, subtraction, multiplication, division, and exponentiation.
+- Variable management with a variable table.
+- Error handling for undefined variables and division by zero.
+
+## AST Node Hierarchy
+
+The program defines a hierarchy of AST nodes, including:
+
+- `Constant`: Represents a constant numerical value.
+- `Identifier`: Represents a variable identifier.
+- `UnaryPlus` and `UnaryMinus`: Represent unary plus and unary minus operations.
+- `Add`, `Subtract`, `Multiply`, `Divide`, and `Power`: Represent binary operations.
+
+## Examples
+
+```cpp
+// Example 1: Simple Addition
+auto additionNode = std::make_unique<Add>(
+    std::make_unique<Constant>(2.0),
+    std::make_unique<Constant>(3.0)
+);
+double result = additionNode->evaluate();  // Result: 5.0
+
+// Example 2: Variable and Unary Minus
+auto variableX = std::make_unique<Identifier>("x");
+auto unaryMinusNode = std::make_unique<UnaryMinus>(std::move(variableX));
+Identifier::setVariable("x", 7.0);
+result = unaryMinusNode->evaluate();  // Result: -7.0
+```
+
+## Concepts
+
+This arithmetic expression evaluator leverages Object-Oriented Programming (OOP) principles to provide a modular, extensible, and maintainable solution. The use of OOP concepts enhances the clarity of the code and facilitates the implementation of complex mathematical expressions.
+
+### 1. **Abstraction through Classes and Inheritance:**
+
+The program defines a hierarchy of classes for AST nodes, encapsulating different types of nodes with a common base class `ASTNode`. This abstraction allows the representation of various elements in an arithmetic expression (constants, variables, unary, and binary operations) in a unified manner. Subclasses like `Constant`, `Identifier`, `Unary`, and `Binary` extend the functionality while inheriting common attributes and behaviors.
+
+### 2. **Encapsulation:**
+
+Each AST node class encapsulates its specific behavior and properties. For example:
+
+- The `Constant` class encapsulates the value of a constant.
+- The `Identifier` class encapsulates the handling of variables through a static variable table.
+- The `Unary` and `Binary` classes encapsulate the structure of unary and binary operations, respectively.
+
+This encapsulation promotes code organization and limits access to internal details, enhancing the program's maintainability.
+
+### 3. **Polymorphism:**
+
+Polymorphism is employed through virtual functions in the `ASTNode` class. The `evaluate` and `getType` functions are declared as virtual, allowing each derived class to provide its implementation. This enables a consistent interface for evaluating and retrieving the type of different AST nodes, simplifying the code that works with these nodes.
+
+### 4. **Dynamic Memory Management:**
+
+Dynamic memory management is utilized through the use of `std::unique_ptr` to represent ownership of AST node pointers. This helps in efficient memory usage and ensures proper memory deallocation when nodes are no longer needed, avoiding memory leaks.
+
+### 5. **Ease of Extension:**
+
+New node types can be easily added by creating subclasses of `Unary` or `Binary` and implementing their specific behaviors. This extensibility allows the program to accommodate additional mathematical operations without significantly modifying the existing codebase.
+
+### 6. **Error Handling and Information Hiding:**
+
+Error handling for undefined variables and division by zero is localized within the `Identifier` and `Divide` classes, respectively. This localized approach enhances information hiding and makes it easier to manage and extend error-handling mechanisms in the future.
+
+In summary, the use of OOP principles in this arithmetic expression evaluator contributes to code organization, maintainability, and extensibility. It provides a foundation for easily incorporating new features, handling different node types, and adapting to evolving requirements in a systematic manner.
+
+## Memory Management
+
+The arithmetic expression evaluator makes deliberate memory management choices to ensure efficient resource usage and proper handling of dynamic memory. The primary memory management features include the use of smart pointers and dynamic memory allocation.
+
+### 1. **Smart Pointers for Ownership:**
+
+The program extensively uses `std::unique_ptr` for managing ownership of dynamically allocated AST nodes. Smart pointers help in:
+
+- **Ownership Transfer:** Each AST node, whether it's a constant, identifier, or operation, is wrapped in a `std::unique_ptr`. This choice ensures that ownership of the nodes is transferred when nodes are moved or released.
+
+- **Automatic Deallocation:** When a `std::unique_ptr` goes out of scope, it automatically deallocates the associated memory. This feature helps prevent memory leaks by ensuring that dynamically allocated nodes are properly released.
+
+```cpp
+std::unique_ptr<ASTNode> constantNode = std::make_unique<Constant>(42.0);
+```
+
+### 2. **Dynamic Memory Allocation for Flexibility:**
+
+Dynamic memory allocation is utilized for creating AST nodes and managing their lifetime. This approach provides flexibility in handling varying expression complexities and enables the creation of nodes at runtime.
+
+- **Creating Nodes Dynamically:**
+  
+  ```cpp
+  auto addNode = std::make_unique<Add>(
+      std::make_unique<Constant>(2.0),
+      std::make_unique<Constant>(3.0)
+  );
+  ```
+
+- **Reducing Resource Consumption:**
+  Dynamic memory allocation allows for efficient resource usage, especially when dealing with a large number of nodes in complex expressions. Memory is allocated only for the nodes that are needed.
+
+### 3. **Virtual Destructors for Proper Cleanup:**
+
+The base class `ASTNode` includes a virtual destructor. This ensures that when a derived class object is deleted through a base class pointer, the appropriate derived class destructor is called. This is crucial for proper cleanup of resources, especially when working with polymorphism.
+
+```cpp
+virtual ~ASTNode() = default;
+```
+
+### 4. **Static Variable Table for Identifier Nodes:**
+
+The `Identifier` class uses a static unordered map (`variableTable`) to store variable values. This design choice allows variable values to persist across multiple instances of `Identifier` nodes. The use of static variables in this context simplifies memory management for variable storage.
+
+```cpp
+static std::unordered_map<std::string, double> variableTable;
+```
+
+These memory management choices aim to strike a balance between efficiency, flexibility, and proper resource cleanup. Smart pointers and dynamic memory allocation enable the creation and manipulation of complex expression trees while helping prevent common memory-related issues. The use of virtual destructors ensures that resources are released appropriately, contributing to the overall robustness of the program.
+
+## Testing
+
+The provided code includes a test harness for the arithmetic expression evaluator, enabling the verification of the functionality of different AST nodes and expressions. The testing approach is centered around individual components and functionalities of the arithmetic expression evaluator. Each relevant aspect, such as constant nodes, identifier nodes, unary operations, binary operations, and error handling, is tested independently.
+
+### Test Harness Structure
+
+#### 1. **Testing Macro and Assertions:**
+
+The `ASSERT_EQUAL` macro is defined to simplify test assertions. It compares the expected and actual values and outputs the result of the test, printing an error message if the assertion fails. This macro enhances readability and reduces boilerplate code in each test function.
+
+```cpp
+#define ASSERT_EQUAL(expected, actual) \
+    do { /* ... */ } while (0)
+```
+
+#### 2. **Individual Test Functions:**
+
+There are individual test functions for each major component of the AST nodes, such as `testConstant`, `testIdentifier`, `testUnaryPlus`, and so on. These functions instantiate instances of the corresponding AST nodes, perform evaluations, and use assertions to verify the expected outcomes.
+
+```cpp
+void testConstant() {
+    // ... test logic ...
+    ASSERT_EQUAL(expectedValue, actualValue);
+}
+```
+
+#### 3. **Test Runner Function:**
+
+The `runTests` function invokes each individual test function and prints the result of each test. If all tests pass, a success message is displayed.
+
+```cpp
+int runTests() {
+    // ... run individual test functions ...
+    std::cout << "All tests passed successfully.\n";
+    return 0;
+}
+```
+
+#### 4. **Main Function for Test Execution:**
+
+The `main` function serves as the entry point for executing the tests. If the command-line argument `--run-tests` is provided, the test harness runs. Otherwise, a help message is displayed to guide users on using the program.
+
+```cpp
+int main(int argc, char *argv[]) {
+    if (argc == 2 && std::strcmp(argv[1], "--run-tests") == 0) {
+        // Run tests if --run-tests is specified
+        runTests();
+    } else {
+        // Display help message for usage guidance
+        printHelpMessage(argv[0]);
+    }
+    return 0;
+}
+```
+
+### Enabling and Disabling Tests
+
+The testing code is conditionally compiled based on the `ENABLE_TESTS` macro. When `ENABLE_TESTS` is defined, the testing-related code is included. This modular approach allows developers to easily enable or disable tests as needed.
+
+### Running Tests
+
+To run the tests, execute the program with the `--run-tests` command-line argument. For example:
+
+```bash
+./your_program_name --run-tests
+```
+
+This will trigger the execution of the test harness, providing feedback on the success or failure of each individual test.
 
 ## Usage
 
-To use the expression evaluator, follow these steps:
+To build the project, run:
 
-1. **Variable Assignment:** Use the `Identifier::setVariable` method to assign values to variables.
-2. **Expression Creation:** Construct the expression using the provided AST nodes and operators.
-3. **Evaluation:** Call the `evaluate` method on the root node of the expression.
-4. **Cleanup:** Release the allocated memory using `delete` and, if needed, clear assigned variables.
-
-## ASTNode Hierarchy
-
-The ASTNode hierarchy consists of the following classes:
-
-- `Constant`: Represents a constant numerical value.
-- `Identifier`: Represents a variable identified by a string.
-- `Unary`: Abstract base class for unary operators.
-  - `UnaryPlus`: Represents the unary plus operator.
-  - `UnaryMinus`: Represents the unary minus operator.
-- `Binary`: Abstract base class for binary operators.
-  - `Add`: Represents the addition operator.
-  - `Subtract`: Represents the subtraction operator.
-  - `Multiply`: Represents the multiplication operator.
-  - `Divide`: Represents the division operator.
-  - `Power`: Represents the power operator.
-
-## Dependencies
-
-- GNU Make
-- Clang
-
-## Running Tests
-
-#### Test Expression
-
-```math
-\frac{{2 \cdot (3 + 1)}}{{(5 - 1)^{2 + 1}}} = \frac{8}{{4^3}} = \frac{8}{64} = 0.125
+```bash
+make
 ```
 
-#### Test Code
+To run tests, run:
 
-```cpp
-// Test with a complex expression: (2 * (a + b)) / (c - 1) ^ (d + 1)
-Identifier::setVariable("a", 3.0);
-Identifier::setVariable("b", 1.0);
-Identifier::setVariable("c", 5.0);
-Identifier::setVariable("d", 2.0);
-
-std::unique_ptr<const ASTNode> variableA = std::make_unique<Identifier>("a");
-std::unique_ptr<const ASTNode> variableB = std::make_unique<Identifier>("b");
-std::unique_ptr<const ASTNode> variableC = std::make_unique<Identifier>("c");
-std::unique_ptr<const ASTNode> variableD = std::make_unique<Identifier>("d");
-
-std::unique_ptr<const ASTNode> expression = std::make_unique<Divide>(
-    std::make_unique<Multiply>(std::make_unique<Constant>(2.0),
-                               std::make_unique<Add>(std::move(variableA), std::move(variableB))),
-    std::make_unique<Power>(std::make_unique<Subtract>(std::move(variableC), std::make_unique<Constant>(1.0)),
-                            std::make_unique<Add>(std::move(variableD), std::make_unique<Constant>(1.0))));
-
-// Evaluate the expression
-double result = expression->evaluate();
-
-// Asserting the result
-assert(result == 0.125);
-
-std::cout << "Test passed successfully. Result: " << result << std::endl;
-
-// Clear variables for the next test
-Identifier::clearVariables();
+```bash
+make test
 ```
 
-## Error Handling
+To clean the project, run:
 
-The program includes basic error handling. For example, attempting to divide by zero will result in an error message printed to `std::cerr`, and the division operation will return infinity to indicate an error.
+```bash
+make clean
+```
 
-## Variable Assignment
+To clean and rebuild the project, run:
 
-Variables are assigned values using the `Identifier::setVariable` method. If an undefined variable is encountered during evaluation, an error message is printed, and the default value of `0.0` is returned.
-
-## Cleaning Variables
-
-To clean up assigned variables and release allocated memory, use the `Identifier::clearVariables` method. This ensures a clean slate for subsequent expressions.
+```bash
+make rebuild
+```
 
 ## Contributing
 
-Feel free to contribute to the project by opening issues, suggesting improvements, or submitting pull requests. Your contributions are highly appreciated.
+Contributions are welcome! Feel free to open issues or submit pull requests. Please follow the existing coding style and provide appropriate test cases for new features.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This program is licensed under the [MIT License](LICENSE). Feel free to use, modify, and distribute it as per the terms of the license.
