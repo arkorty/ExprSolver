@@ -13,14 +13,9 @@ $(BUILD_DIR):
 $(BUILD_DIR)/$(EXECUTABLE): $(SRC_DIR)/$(SOURCE) $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -o $@ $<
 
-.PHONY: run
-run: $(BUILD_DIR)/$(EXECUTABLE)
-	./$<
-
 .PHONY: test
 test: CXXFLAGS += -DENABLE_TESTS
 test: $(BUILD_DIR)/$(EXECUTABLE)
-	./$< --run-test
 
 .PHONY: clean
 clean:
