@@ -1,18 +1,30 @@
 CXX = clang++
-CXXFLAGS = -std=c++17 -Wall -Wextra
-SOURCE = main.cxx
-EXECUTABLE = ast.out
+CXXFLAGS = -O3 -std=c++17 -Wall -Wextra -pedantic
+BUILD_DIR = build
+SRC_DIR = src
+SOURCE = ast.cxx
+EXECUTABLE = ast
 
-# Build target
-all: $(EXECUTABLE)
+all: $(BUILD_DIR) $(BUILD_DIR)/$(EXECUTABLE)
 
-# Rule to build the executable
-$(EXECUTABLE): $(SOURCE)
-	@$(CXX) $(CXXFLAGS) -o $@ $<
+$(BUILD_DIR):
+	mkdir -p $@
 
-run: $(EXECUTABLE)
-	@./$(EXECUTABLE)
+$(BUILD_DIR)/$(EXECUTABLE): $(SRC_DIR)/$(SOURCE) $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -o $@ $<
 
-# Clean up generated files
+.PHONY: run
+run: $(BUILD_DIR)/$(EXECUTABLE)
+	./$<
+
+.PHONY: test
+test: CXXFLAGS += -DENABLE_TESTS
+test: $(BUILD_DIR)/$(EXECUTABLE)
+	./$< --run-test
+
+.PHONY: clean
 clean:
-	@rm -f $(EXECUTABLE)
+	rm -rf $(BUILD_DIR)
+
+.PHONY: rebuild
+rebuild: clean all
