@@ -118,7 +118,7 @@ int runTests() {
 void printHelpMessage(const char *programName) {
     std::cout << "Usage: " << programName << " [--run-tests]\n"
               << "Options:\n"
-              << "  --run-test  Run the test for the expression evaluation code.\n"
+              << "  --run-tests  Run the test for the expression evaluation code.\n"
               << "              This option should be used without any additional "
                  "arguments.\n"
               << "              Example: " << programName << " --run-tests\n";
